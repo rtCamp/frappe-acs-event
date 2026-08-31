@@ -4,13 +4,13 @@ Receive and track Azure Communication Services email delivery events in Frappe, 
 
 Sending through the ACS SMTP relay is unaffected. This app adds a webhook receiver for what happens after a mail is handed to ACS: delivered, bounced, filtered as spam, quarantined, failed, or suppressed. Each result is stored and, where possible, linked back to the `Email Queue` row it came from.
 
-## Features & Architecture
+## Features
 
-- **Fast, dumb endpoint.** Authenticates, filters, bulk-inserts as `Pending`, returns 200. Matching and cleanup run in a background job every 5 minutes.
-- **Redelivery safe.** Event Grid delivers at least once. The event id is unique, so repeats are dropped.
-- **Unmatched results are kept.** ACS's `internetMessageId` matches `Email Queue.message_id` reliably for Gmail, but is reported to be rewritten for Microsoft mailboxes. A miss is expected and the result is still saved.
-- **Account specific filtering.** Each `ACS Account` lists the Email Accounts it sends for. Events are routed by their Event Grid `topic`, so more than one resource can share the endpoint.
-- **Authenticated by default.** Event Grid doesn't sign its calls, so every call is checked against the account's secret in constant time.
+- Fast endpoint: authenticates, filters, bulk-inserts as `Pending`, returns 200. Matching and cleanup run in a background job every 5 minutes.
+- Redelivery safe: Event Grid delivers at least once. The event id is unique, so repeats are dropped.
+- Unmatched results are kept. ACS's `internetMessageId` matches `Email Queue.message_id` reliably for Gmail, but is reported to be rewritten for Microsoft mailboxes. A miss is expected and the result is still saved.
+- Account specific filtering: each `ACS Account` lists the Email Accounts it sends for. Events are routed by their Event Grid `topic`, so more than one resource can share the endpoint.
+- Authenticated by default: Event Grid doesn't sign its calls, so every call is checked against the account's secret in constant time.
 
 ## The seven results
 
@@ -26,7 +26,7 @@ Sending through the ACS SMTP relay is unaffected. This app adds a webhook receiv
 
 Anything ACS adds later is stored as `unknown` rather than dropped.
 
-## Setup & Configuration
+## Setup
 
 ### In Frappe
 
@@ -41,34 +41,19 @@ Anything ACS adds later is stored as `unknown` rather than dropped.
 
 1. Register the **Event Grid** resource provider, if it isn't already.
 2. On the Communication Services resource, add an **Event Subscription**:
-   - **Event Schema:** Event Grid Schema, not CloudEvents (see below).
+   - **Event Schema:** Event Grid Schema (required, not CloudEvents).
    - **Endpoint:** Web Hook, pointing at `https://<your-site>/api/method/frappe_acs_event.api.acs_webhook.handle?token=<secret>`
    - **Event type:** `Microsoft.Communication.EmailDeliveryReportReceived`
 3. The site needs HTTPS with a certificate from a real authority. Event Grid won't call a self-signed one.
 4. Ask Azure to raise the send quota if you're on a verified custom domain. The default is 30/minute, 100/hour.
 
-Create the `ACS Account` in Frappe before adding the Azure subscription. Event Grid validates ownership on creation, and only an authenticated call gets a real answer.
+Create the `ACS Account` in Frappe before adding the Azure subscription, so the validation handshake is authenticated.
 
 ## Matching a result to a mail
 
-The match is exact: `internetMessageId`, stripped of its angle brackets, against `Email Queue.message_id`, scoped to the account's own Email Accounts. A miss is expected for Microsoft mailboxes; the result is still saved with an empty `Email Queue` link.
+The match is exact: `internetMessageId`, stripped of its angle brackets, against `Email Queue.message_id`, scoped to the account's own Email Accounts, matched case-insensitively. A miss is expected for Microsoft mailboxes; the result is still saved with an empty `Email Queue` link.
 
 Resending a mail reuses the original Communication's `message_id`, so two Email Queue rows can share one. The app picks the newest row created before the event.
-
-## Two things that cost a day each if missed
-
-- **Use the Event Grid schema, not CloudEvents.** CloudEvents proves ownership with an HTTP `OPTIONS` request. Frappe answers every `OPTIONS` with an empty response before routing, so no whitelisted method can ever see it.
-- **The validation reply needs a bare JSON body.** Frappe wraps whitelisted method returns in `{"message": ...}`, which hides the key Event Grid expects. The app returns a werkzeug `Response` to skip the wrapper.
-
-## What ACS's published docs get wrong
-
-Confirmed against a real payload from our own resource:
-
-1. The timestamp field is `deliveryAttemptTimestamp`, lowercase s. The docs write it with a capital S.
-2. `deliveryStatusDetails` also carries `recipientMailServerHostName`, undocumented but real.
-3. `statusMessage` is `""` on success, not absent.
-4. `internetMessageId` arrives wrapped in `<>`.
-5. Casing isn't stable across fields. Matching ignores case.
 
 ## Not handled
 
