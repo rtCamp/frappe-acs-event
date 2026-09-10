@@ -51,7 +51,7 @@ Create the `ACS Account` in Frappe before adding the Azure subscription, so the 
 
 ## Matching a result to a mail
 
-The match is exact: `internetMessageId`, stripped of its angle brackets, against `Email Queue.message_id`, scoped to the account's own Email Accounts, matched case-insensitively. A miss is expected for Microsoft mailboxes; the result is still saved with an empty `Email Queue` link.
+The match is exact: `internetMessageId`, stripped of its angle brackets, against `Email Queue.message_id`, scoped to the account's own Email Accounts, matched case-sensitively. A miss is expected for Microsoft mailboxes; the result is still saved with an empty `Email Queue` link.
 
 Resending a mail reuses the original Communication's `message_id`, so two Email Queue rows can share one. The app picks the newest row created before the event.
 
