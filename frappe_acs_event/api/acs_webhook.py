@@ -208,6 +208,7 @@ def _bulk_insert_events(events: list[dict], acs_account: str) -> int:
 
     now = frappe.utils.now()
     user = "Administrator"
+    meta = frappe.get_meta("ACS Email Event")
 
     event_ids = {(event.get("id") or "").strip() for event in events}
     event_ids.discard("")
@@ -228,7 +229,7 @@ def _bulk_insert_events(events: list[dict], acs_account: str) -> int:
         if not event_id or event_id in existing_event_ids or event_id in seen_in_batch:
             continue
         seen_in_batch.add(event_id)
-        parsed.append(_parse_event(event, event_id))
+        parsed.append(_parse_event(event, event_id, meta))
 
     if not parsed:
         return 0
@@ -271,28 +272,34 @@ def _bulk_insert_events(events: list[dict], acs_account: str) -> int:
     return len(rows)
 
 
-def _parse_event(event: dict, event_id: str) -> dict:
-    """Extracts our columns from one raw Event Grid delivery event."""
+def _parse_event(event: dict, event_id: str, meta=None) -> dict:
+    """Extracts our columns from one raw Event Grid delivery event.
+
+    A batch passes its own meta in, so the DocType is looked up once, not per field.
+    """
+    meta = meta or frappe.get_meta("ACS Email Event")
     data = event.get("data") or {}
     status_details = data.get("deliveryStatusDetails") or {}
     internet_message_id = data.get("internetMessageId") or ""
 
     return {
-        "event_id": _trim(event_id, "event_id"),
-        "acs_message_id": _trim(data.get("messageId"), "acs_message_id"),
-        "internet_message_id": _trim(internet_message_id, "internet_message_id"),
-        "message_id": _trim(matching.clean_message_id(internet_message_id), "message_id"),
+        "event_id": _trim(event_id, "event_id", meta),
+        "acs_message_id": _trim(data.get("messageId"), "acs_message_id", meta),
+        "internet_message_id": _trim(internet_message_id, "internet_message_id", meta),
+        "message_id": _trim(matching.clean_message_id(internet_message_id), "message_id", meta),
         "event_type": normalise_status(data.get("status")),
-        "acs_status": _trim(data.get("status"), "acs_status"),
-        "sender_email": _trim(data.get("sender"), "sender_email"),
-        "recipient_email": _trim(data.get("recipient"), "recipient_email"),
+        "acs_status": _trim(data.get("status"), "acs_status", meta),
+        "sender_email": _trim(data.get("sender"), "sender_email", meta),
+        "recipient_email": _trim(data.get("recipient"), "recipient_email", meta),
         # Both casings of this field are accepted.
         "event_timestamp": _to_system_datetime(
             data.get("deliveryAttemptTimestamp") or data.get("deliveryAttemptTimeStamp")
         ),
         # Empty string on success, not absent. Test truthiness, not key presence.
         "status_message": status_details.get("statusMessage") or None,
-        "recipient_mail_server": _trim(status_details.get("recipientMailServerHostName"), "recipient_mail_server"),
+        "recipient_mail_server": _trim(
+            status_details.get("recipientMailServerHostName"), "recipient_mail_server", meta
+        ),
         "raw_payload": json.dumps(event, default=str),
     }
 
@@ -321,7 +328,7 @@ def _to_system_datetime(value) -> datetime | None:
     return convert_utc_to_system_timezone(parsed).replace(tzinfo=None)
 
 
-def _trim(value, fieldname: str) -> str | None:
+def _trim(value, fieldname: str, meta) -> str | None:
     """Bulk insert skips document validation, so column limits are ours to keep.
 
     The limit is read from the field itself, not repeated here, so it can't
@@ -332,5 +339,4 @@ def _trim(value, fieldname: str) -> str | None:
     value = str(value).strip()
     if not value:
         return None
-    length = frappe.get_meta("ACS Email Event").get_field(fieldname).length
-    return value[:length]
+    return value[: meta.get_field(fieldname).length]
