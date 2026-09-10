@@ -167,7 +167,11 @@ def _decode_subject(raw_message: str | None) -> str | None:
         fragments.append(fragment)
 
     subject = "".join(fragments).strip()
-    return subject[:255] if subject else None
+    if not subject:
+        return None
+
+    max_length = frappe.get_meta("ACS Email Event").get_field("email_subject").length
+    return subject[:max_length]
 
 
 def _cleanup_old_events() -> None:

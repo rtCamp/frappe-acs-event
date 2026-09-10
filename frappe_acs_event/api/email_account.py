@@ -22,6 +22,8 @@ def acs_email_account_query(
 ):
     """Link-field query offering only outgoing Email Accounts that relay through ACS."""
 
+    frappe.has_permission("Email Account", ptype="select", throw=True)
+
     sanitize_searchfield(searchfield)
 
     start = cint(start)

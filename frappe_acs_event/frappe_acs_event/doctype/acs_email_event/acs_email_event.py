@@ -3,22 +3,14 @@
 
 from frappe.model.document import Document
 
-# ACS status -> our normalised event_type. Anything ACS adds later is stored as
-# "unknown" rather than dropped, so a new status never loses a delivery result.
-STATUS_MAP = {
-    "delivered": "delivered",
-    "bounced": "bounce",
-    "filteredspam": "spam",
-    "quarantined": "quarantined",
-    "failed": "failed",
-    "suppressed": "suppressed",
-    "expanded": "expanded",
-}
-
 
 def normalise_status(acs_status: str | None) -> str:
-    """Map a raw ACS ``data.status`` onto our event_type vocabulary."""
-    return STATUS_MAP.get((acs_status or "").strip().lower(), "unknown")
+    """Lowercases and trims ACS's raw ``data.status`` for a consistent event_type.
+
+    Stored as ACS sends it, not remapped, so a status Azure adds later shows
+    up under its own name instead of needing a matching entry here first.
+    """
+    return (acs_status or "").strip().lower() or "unknown"
 
 
 class ACSEmailEvent(Document):

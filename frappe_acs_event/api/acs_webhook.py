@@ -270,21 +270,21 @@ def _parse_event(event: dict, event_id: str) -> dict:
     internet_message_id = data.get("internetMessageId") or ""
 
     return {
-        "event_id": _trim(event_id, 255),
-        "acs_message_id": _trim(data.get("messageId"), 255),
-        "internet_message_id": _trim(internet_message_id, 255),
-        "message_id": _trim(matching.clean_message_id(internet_message_id), 255),
+        "event_id": _trim(event_id, "event_id"),
+        "acs_message_id": _trim(data.get("messageId"), "acs_message_id"),
+        "internet_message_id": _trim(internet_message_id, "internet_message_id"),
+        "message_id": _trim(matching.clean_message_id(internet_message_id), "message_id"),
         "event_type": normalise_status(data.get("status")),
-        "acs_status": _trim(data.get("status"), 40),
-        "sender_email": _trim(data.get("sender"), 255),
-        "recipient_email": _trim(data.get("recipient"), 255),
+        "acs_status": _trim(data.get("status"), "acs_status"),
+        "sender_email": _trim(data.get("sender"), "sender_email"),
+        "recipient_email": _trim(data.get("recipient"), "recipient_email"),
         # Both casings of this field are accepted.
         "event_timestamp": _to_system_datetime(
             data.get("deliveryAttemptTimestamp") or data.get("deliveryAttemptTimeStamp")
         ),
         # Empty string on success, not absent. Test truthiness, not key presence.
         "status_message": status_details.get("statusMessage") or None,
-        "recipient_mail_server": _trim(status_details.get("recipientMailServerHostName"), 255),
+        "recipient_mail_server": _trim(status_details.get("recipientMailServerHostName"), "recipient_mail_server"),
         "raw_payload": json.dumps(event, default=str),
     }
 
@@ -313,9 +313,16 @@ def _to_system_datetime(value) -> datetime | None:
     return convert_utc_to_system_timezone(parsed).replace(tzinfo=None)
 
 
-def _trim(value, length: int) -> str | None:
-    """Bulk insert skips document validation, so column limits are ours to keep."""
+def _trim(value, fieldname: str) -> str | None:
+    """Bulk insert skips document validation, so column limits are ours to keep.
+
+    The limit is read from the field itself, not repeated here, so it can't
+    drift out of sync with the DocType.
+    """
     if value is None:
         return None
     value = str(value).strip()
-    return value[:length] if value else None
+    if not value:
+        return None
+    length = frappe.get_meta("ACS Email Event").get_field(fieldname).length
+    return value[:length]

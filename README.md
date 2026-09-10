@@ -17,14 +17,14 @@ Sending through the ACS SMTP relay is unaffected. This app adds a webhook receiv
 | ACS status | `event_type` | Meaning |
 |---|---|---|
 | `Delivered` | `delivered` | Reached the recipient's mail server. Not proof of inbox delivery. |
-| `Bounced` | `bounce` | Refused for good. |
-| `FilteredSpam` | `spam` | Rejected as spam. |
+| `Bounced` | `bounced` | Refused for good. |
+| `FilteredSpam` | `filteredspam` | Rejected as spam. |
 | `Quarantined` | `quarantined` | Accepted, then held. The recipient likely never sees it. |
 | `Failed` | `failed` | Catch-all. Reason is free text in `status_message`. |
 | `Suppressed` | `suppressed` | Never tried. Address is on ACS's block list. |
 | `Expanded` | `expanded` | A group address was expanded. Informational. |
 
-Anything ACS adds later is stored as `unknown` rather than dropped.
+`event_type` is ACS's own `data.status`, lowercased, not remapped to a different name. Anything ACS adds later is stored under its own lowercased name; a missing status is stored as `unknown`.
 
 ## Setup
 

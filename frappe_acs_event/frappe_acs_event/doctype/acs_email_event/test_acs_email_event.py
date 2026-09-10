@@ -43,10 +43,10 @@ REAL_EVENT = {
 class UnitTestACSEmailEvent(UnitTestCase):
     """Unit tests for the pure parts of the ACS event pipeline."""
 
-    def test_every_documented_status_maps(self):
+    def test_every_documented_status_is_lowercased_as_is(self):
         self.assertEqual(normalise_status("Delivered"), "delivered")
-        self.assertEqual(normalise_status("Bounced"), "bounce")
-        self.assertEqual(normalise_status("FilteredSpam"), "spam")
+        self.assertEqual(normalise_status("Bounced"), "bounced")
+        self.assertEqual(normalise_status("FilteredSpam"), "filteredspam")
         self.assertEqual(normalise_status("Quarantined"), "quarantined")
         self.assertEqual(normalise_status("Failed"), "failed")
         self.assertEqual(normalise_status("Suppressed"), "suppressed")
@@ -54,11 +54,14 @@ class UnitTestACSEmailEvent(UnitTestCase):
 
     def test_status_casing_is_not_trusted(self):
         self.assertEqual(normalise_status("delivered"), "delivered")
-        self.assertEqual(normalise_status("  BOUNCED "), "bounce")
+        self.assertEqual(normalise_status("  BOUNCED "), "bounced")
 
-    def test_unknown_status_is_kept_not_dropped(self):
-        self.assertEqual(normalise_status("SomethingAzureAddedLater"), "unknown")
+    def test_a_new_status_is_kept_under_its_own_name(self):
+        self.assertEqual(normalise_status("SomethingAzureAddedLater"), "somethingazureaddedlater")
+
+    def test_a_missing_status_falls_back_to_unknown(self):
         self.assertEqual(normalise_status(None), "unknown")
+        self.assertEqual(normalise_status(""), "unknown")
 
     def test_message_id_loses_its_angle_brackets(self):
         self.assertEqual(
