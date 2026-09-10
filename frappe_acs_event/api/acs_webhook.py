@@ -131,6 +131,14 @@ def _answer_subscription_validation(event: dict, acs_account: str | None) -> Res
         )
         return Response(json.dumps({}), content_type="application/json", status=200)
 
+    # No code to echo means the handshake can only go the manual route.
+    if not validation_code:
+        frappe.logger("acs_webhook").warning(
+            f"Event Grid subscription validation for ACS Account {acs_account} carried no "
+            f"validationCode. Complete the handshake manually at: {validation_url}"
+        )
+        return Response(json.dumps({}), content_type="application/json", status=200)
+
     frappe.logger("acs_webhook").info(
         f"Answering Event Grid subscription validation for ACS Account {acs_account}. "
         f"Manual fallback URL (valid 10 minutes): {validation_url}"
