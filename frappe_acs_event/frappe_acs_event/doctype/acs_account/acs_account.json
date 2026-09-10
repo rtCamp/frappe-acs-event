@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-21 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enable_webhook",
+  "acs_resource_id",
+  "webhook_secret",
+  "event_retention_days",
+  "email_accounts_section",
+  "email_accounts"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "Enable receiving ACS delivery events.",
+   "fieldname": "enable_webhook",
+   "fieldtype": "Check",
+   "label": "Enable ACS Webhook"
+  },
+  {
+   "description": "Azure resource ID, from Event Grid's topic field.",
+   "fieldname": "acs_resource_id",
+   "fieldtype": "Data",
+   "label": "ACS Resource ID",
+   "length": 500,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "Append to the webhook URL as ?token=&lt;secret&gt;.",
+   "fieldname": "webhook_secret",
+   "fieldtype": "Password",
+   "label": "Webhook Secret",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "0 = never delete.",
+   "fieldname": "event_retention_days",
+   "fieldtype": "Int",
+   "label": "Event Retention (Days)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "email_accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Email Accounts"
+  },
+  {
+   "fieldname": "email_accounts",
+   "fieldtype": "Table",
+   "label": "Email Accounts",
+   "options": "ACS Email Account",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-08-21 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Frappe ACS Event",
+ "name": "ACS Account",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
