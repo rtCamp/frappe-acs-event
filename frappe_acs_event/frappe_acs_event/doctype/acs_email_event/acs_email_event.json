@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "hash",
- "creation": "2026-08-21 00:00:00.000000",
+ "creation": "2026-08-21 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -123,10 +123,10 @@
   {
    "fieldname": "email_queue",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Email Queue",
    "options": "Email Queue",
-   "read_only": 1,
-   "in_list_view": 1
+   "read_only": 1
   },
   {
    "fieldname": "email_subject",
@@ -181,7 +181,7 @@
  ],
  "in_create": 1,
  "links": [],
- "modified": "2026-08-21 00:00:00.000000",
+ "modified": "2026-09-15 20:10:52.527408",
  "modified_by": "Administrator",
  "module": "Frappe ACS Event",
  "name": "ACS Email Event",
@@ -196,5 +196,6 @@
  "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 1
 }

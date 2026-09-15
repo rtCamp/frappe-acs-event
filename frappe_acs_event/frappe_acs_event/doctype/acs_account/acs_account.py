@@ -14,7 +14,6 @@ class ACSAccount(Document):
 
     if TYPE_CHECKING:
         from frappe.types import DF
-
         from frappe_acs_event.frappe_acs_event.doctype.acs_email_account.acs_email_account import ACSEmailAccount
 
         acs_resource_id: DF.Data
