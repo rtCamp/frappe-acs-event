@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "hash",
- "creation": "2026-08-21 00:00:00.000000",
+ "creation": "2026-08-21 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -24,6 +24,7 @@
    "description": "Azure resource ID, from Event Grid's topic field.",
    "fieldname": "acs_resource_id",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "ACS Resource ID",
    "length": 500,
    "reqd": 1,
@@ -33,6 +34,7 @@
    "description": "Append to the webhook URL as ?token=&lt;secret&gt;.",
    "fieldname": "webhook_secret",
    "fieldtype": "Password",
+   "in_list_view": 1,
    "label": "Webhook Secret",
    "reqd": 1
   },
@@ -60,7 +62,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-21 00:00:00.000000",
+ "modified": "2026-09-15 20:10:46.912802",
  "modified_by": "Administrator",
  "module": "Frappe ACS Event",
  "name": "ACS Account",
@@ -84,5 +86,6 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 1
 }
